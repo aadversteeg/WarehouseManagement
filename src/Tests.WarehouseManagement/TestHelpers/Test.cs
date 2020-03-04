@@ -62,6 +62,53 @@ namespace Tests.WarehouseManagement.TestHelpers
         }
     }
 
+    public class WhenUsingAction<TAggregate> where TAggregate : class
+    {
+        private IEnumerable<Event> _givenEvents;
+        private Action<TAggregate> _action;
+
+        public WhenUsingAction(IEnumerable<Event> givenEvents, Action<TAggregate> action)
+        {
+            _givenEvents = givenEvents;
+            _action = action;
+        }
+
+        public TAggregate Then(params Event[] expectedEvents)
+        {
+            var type = typeof(TAggregate);
+            var constructor = type.GetConstructor(new[] { typeof(IMediator), typeof(IEnumerable<Event>) });
+
+            var mediatorMock = new MockMediator();
+            var aggregate = constructor.Invoke(new object[] { mediatorMock, _givenEvents }) as TAggregate;
+
+            _action(aggregate);
+            
+
+            Assert.Equal(expectedEvents, mediatorMock.PublishedEvents, new CustomComparer<Event>());
+            return aggregate;
+        }
+
+        public void Then<TException>() where TException : Exception
+        {
+            Exception exceptionThrown = null;
+
+            try
+            {
+                var type = typeof(TAggregate);
+                var constructor = type.GetConstructor(new[] { typeof(IMediator), typeof(IEnumerable<Event>) });
+
+                var mediatorMock = new MockMediator();
+                var aggregate = constructor.Invoke(new object[] { mediatorMock, _givenEvents }) as TAggregate;
+
+                _action(aggregate);
+            }
+            catch (Exception e)
+            {
+                exceptionThrown = e.InnerException;
+            }
+            Assert.Equal(typeof(TException), exceptionThrown?.GetType());
+        }
+    }
 
     public class Given<TAggregate> where TAggregate : class
     {
@@ -75,6 +122,11 @@ namespace Tests.WarehouseManagement.TestHelpers
         public WhenUsingCommands<TAggregate> When(params Command[] commands)
         {
             return new WhenUsingCommands<TAggregate>(_events, commands);
+        }
+
+        public WhenUsingAction<TAggregate> When(Action<TAggregate> action)
+        {
+            return new WhenUsingAction<TAggregate>(_events, action);
         }
     }
 
