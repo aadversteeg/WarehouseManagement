@@ -7,12 +7,12 @@ using Xunit;
 
 namespace Tests.WarehouseManagement.TestHelpers
 {
-    public class When<TAggregate> where TAggregate : class
+    public class WhenUsingCommands<TAggregate> where TAggregate : class
     {
         private IEnumerable<Event> _givenEvents;
         private IEnumerable<Command> _commands;
 
-        public When(IEnumerable<Event> givenEvents, IEnumerable<Command> commands)
+        public WhenUsingCommands(IEnumerable<Event> givenEvents, IEnumerable<Command> commands)
         {
             _givenEvents = givenEvents;
             _commands = commands;
@@ -62,6 +62,7 @@ namespace Tests.WarehouseManagement.TestHelpers
         }
     }
 
+
     public class Given<TAggregate> where TAggregate : class
     {
         private IEnumerable<Event> _events;
@@ -71,9 +72,9 @@ namespace Tests.WarehouseManagement.TestHelpers
             _events = events;
         }
 
-        public When<TAggregate> When(params Command[] commands)
+        public WhenUsingCommands<TAggregate> When(params Command[] commands)
         {
-            return new When<TAggregate>(_events, commands);
+            return new WhenUsingCommands<TAggregate>(_events, commands);
         }
     }
 
