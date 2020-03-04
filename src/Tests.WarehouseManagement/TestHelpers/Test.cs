@@ -104,7 +104,7 @@ namespace Tests.WarehouseManagement.TestHelpers
             }
             catch (Exception e)
             {
-                exceptionThrown = e.InnerException;
+                exceptionThrown = e;
             }
             Assert.Equal(typeof(TException), exceptionThrown?.GetType());
         }

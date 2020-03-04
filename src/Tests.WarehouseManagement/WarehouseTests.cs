@@ -20,7 +20,7 @@ namespace Tests.WarehouseManagement
                     new CreatedLocation() { Id = 3, Name = "Assemble" },
                     new CreatedLocation() { Id = 4, Name = "Store" }
                 )
-                .When(new ReceiveBatch { BatchId = 1, Quantity = 10 })
+                .When( w => w.ReceiveBatch( 1, 10))
                 .Then(
                     new AddedBatch { BatchId = 1, Quantity = 10 },
                     new AddedBatchToLocation { BatchId = 1, LocationId = 1, Quantity = 10 }
@@ -38,7 +38,7 @@ namespace Tests.WarehouseManagement
                     new CreatedLocation() { Id = 4, Name = "Store" },
                     new AddedBatch { BatchId = 1, Quantity = 10 },
                     new AddedBatchToLocation { LocationId = 2, BatchId = 1, Quantity = 10 })
-                .When(new ShipBatch { BatchId = 1, Quantity = 7 })
+                .When( w => w.ShipBatch(1,7))
                 .Then(
                     new RemovedBatchFromLocation { LocationId = 2, BatchId = 1, Quantity = 7 },
                     new RemovedBatch { BatchId = 1, Quantity = 7 }
@@ -59,7 +59,7 @@ namespace Tests.WarehouseManagement
                     new AddedBatch { BatchId = 2, Quantity = 10 },
                     new AddedBatchToLocation { LocationId = 3, BatchId = 2, Quantity = 10 }
                 )
-                .When(new AssembleBatch {
+                .When( w=> w.AssembleBatch( new BatchAssembleOrder {
                     BatchId = 3,
                     Quantity = 2,
                     From = new[]
@@ -67,7 +67,7 @@ namespace Tests.WarehouseManagement
                         new BatchQuantity { BatchId = 1, Quantity = 1},
                         new BatchQuantity { BatchId = 2, Quantity = 2}
                     }
-                })
+                }))
                 .Then(
                     new RemovedBatchFromLocation { LocationId = 3, BatchId = 1, Quantity = 2 },
                     new RemovedBatch { BatchId = 1, Quantity = 2 },
@@ -88,7 +88,7 @@ namespace Tests.WarehouseManagement
                     new CreatedLocation() { Id = 3, Name = "Assemble" },
                     new CreatedLocation() { Id = 4, Name = "Store" },
                     new AddedBatchToLocation { LocationId = 2, BatchId = 1, Quantity = 5 })
-                .When(new ShipBatch { BatchId = 1, Quantity = 7 })
+                .When(w => w.ShipBatch(1, 7))
                 .Then<InvalidOperationException>();
         }
 
@@ -97,7 +97,7 @@ namespace Tests.WarehouseManagement
         {
             new Test<Warehouse>()
                 .Given()
-                .When(new ShipBatch { BatchId = 1, Quantity = 7 })
+                .When(w => w.ShipBatch(1, 7))
                 .Then<InvalidOperationException>();
         }
 
@@ -117,7 +117,7 @@ namespace Tests.WarehouseManagement
                     new AddedBatch() { BatchId = 2, Quantity = 10 },
                     new AddedBatchToLocation() { BatchId = 2, LocationId = 5, Quantity = 10 }
                 )
-                .When(new MoveBatch { BatchId = 1, Quantity = 7, FromLocationId = 4, ToLocationId = 5 })
+                .When( w => w.MoveBatch(1, 7, 4, 5))
                 .Then<InvalidOperationException>();
         }
 
@@ -135,7 +135,7 @@ namespace Tests.WarehouseManagement
                     new AddedBatch() { BatchId = batchId, Quantity = 10 },
                     new AddedBatchToLocation() { BatchId = batchId, LocationId = 4, Quantity = 10 }
                 )
-                .When(new MoveBatch { BatchId = batchId, Quantity = 7, FromLocationId = 4, ToLocationId =5 })
+                .When( w => w.MoveBatch(batchId, 7, 4, 5))
                 .Then(
                     new RemovedBatchFromLocation() { BatchId = batchId, LocationId = 4, Quantity = 7 },
                     new AddedBatchToLocation() { BatchId = batchId, LocationId = 5, Quantity = 7 }
