@@ -1,4 +1,6 @@
-﻿namespace Core.Commands
+﻿using Extensions.Messaging;
+
+namespace Core.Commands
 {
     public class ShipBatch : Command
     {

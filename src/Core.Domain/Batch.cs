@@ -1,4 +1,6 @@
-﻿namespace Core
+﻿using Extensions;
+
+namespace Core
 {
     public class Batch : Entity
     {

@@ -1,29 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Core.Commands;
 using Core.Events;
+using Extensions;
+using Extensions.Messaging;
 
 namespace Core
 {
-    public partial class Warehouse
+    public partial class Warehouse : AggregateRoot
     {
         private IDictionary<int, int> _quantityByBatchId = new Dictionary<int, int>();
         private IDictionary<int, Location> _locationByLocationId = new Dictionary<int, Location>();
         private IDictionary<int, Batch> _batchesById = new Dictionary<int, Batch>();
 
-        private IMediator _mediator;
-
-        public Warehouse(IMediator mediator, IEnumerable<Event> events)
-            : this(mediator)
+        public Warehouse(IEventSink mediator) 
+            : base(mediator)
         {
-            Handle(events);
         }
 
-        public Warehouse(IMediator mediator)
+        public Warehouse(IEventSink mediator, IReadOnlyCollection<Event> events) 
+            : base(mediator, events)
         {
-            _mediator = mediator;
         }
 
         public void ReceiveBatch(int batchId, int quantity)
@@ -102,30 +100,64 @@ namespace Core
             HandleAndPublish(events);
         }
 
-        private Task HandleAndPublish(IEnumerable<Event> events)
+        private void Handle(AddedBatch evt)
         {
-            foreach (var ev in events)
+            if (_quantityByBatchId.TryGetValue(evt.BatchId, out int quantityInWarehouse))
             {
-                Handle(ev);
+                _quantityByBatchId[evt.BatchId] = quantityInWarehouse + evt.Quantity;
             }
-            return _mediator.Publish(events);
-        }
-
-        private void Handle(IEnumerable<Event> events)
-        {
-            foreach (var ev in events)
+            else
             {
-                Handle(ev);
+                _quantityByBatchId.Add(evt.BatchId, evt.Quantity);
             }
         }
 
-        private Task HandleAndPublish(Event evt)
+        private void Handle(RemovedBatch evt)
         {
-            Handle(evt);
-            return _mediator.Publish(evt);
+            var quantityInWarehouse = _quantityByBatchId[evt.BatchId];
+            if (evt.Quantity > quantityInWarehouse)
+            {
+                quantityInWarehouse = quantityInWarehouse - evt.Quantity;
+
+                _quantityByBatchId[evt.BatchId] = quantityInWarehouse;
+            }
+            _quantityByBatchId.Remove(evt.BatchId);
         }
 
-        private void Handle(Event evt)
+        private void Handle(CreatedLocation evt)
+        {
+            var location = new Location()
+            {
+                Id = evt.Id,
+                Name = evt.Name
+            };
+            _locationByLocationId.Add(location.Id, location);
+        }
+
+        private void Handle(AddedBatchToLocation evt)
+        {
+            var location = _locationByLocationId[evt.LocationId];
+            location.AddBatch(evt.BatchId, evt.Quantity);
+        }
+
+        private void Handle(RemovedBatchFromLocation evt)
+        {
+            var location = _locationByLocationId[evt.LocationId];
+            location.RemoveBatch(evt.BatchId, evt.Quantity);
+        }
+
+        private void Handle(RegisteredBatch evt)
+        {
+            var batch = new Batch()
+            {
+                Id = evt.BatchId,
+                Name = evt.Name,
+                IsPharma = evt.IsPharma
+            };
+            _batchesById.Add(batch.Id, batch);
+        }
+
+        protected override void Handle(Event evt)
         {
             if (evt is RemovedBatch shippedBatch)
             {

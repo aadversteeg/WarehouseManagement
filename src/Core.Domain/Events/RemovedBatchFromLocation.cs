@@ -1,4 +1,6 @@
-﻿namespace Core.Events
+﻿using Extensions.Messaging;
+
+namespace Core.Events
 {
     public class RemovedBatchFromLocation : Event
     {

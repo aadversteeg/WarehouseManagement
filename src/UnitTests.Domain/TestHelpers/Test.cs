@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Core;
-using Core.Commands;
-using Core.Events;
+using Extensions;
+using Extensions.Messaging;
 using Xunit;
 
 namespace UnitTests.Core.TestHelpers
@@ -21,9 +20,9 @@ namespace UnitTests.Core.TestHelpers
         public TAggregate Then(params Event[] expectedEvents)
         {
             var type = typeof(TAggregate);
-            var constructor = type.GetConstructor(new[] { typeof(IMediator), typeof(IEnumerable<Event>) });
+            var constructor = type.GetConstructor(new[] { typeof(IEventSink), typeof(IEnumerable<Event>) });
 
-            var mediatorMock = new MockMediator();
+            var mediatorMock = new MockEventSink();
             var aggregate = constructor.Invoke(new object[] { mediatorMock, _givenEvents }) as TAggregate;
 
             var method = type.GetMethod("Execute", new[] { typeof(Command) });
@@ -43,9 +42,9 @@ namespace UnitTests.Core.TestHelpers
             try
             {
                 var type = typeof(TAggregate);
-                var constructor = type.GetConstructor(new[] { typeof(IMediator), typeof(IEnumerable<Event>) });
+                var constructor = type.GetConstructor(new[] { typeof(IEventSink), typeof(IEnumerable<Event>) });
 
-                var mediatorMock = new MockMediator();
+                var mediatorMock = new MockEventSink();
                 var aggregate = constructor.Invoke(new object[] { mediatorMock, _givenEvents }) as TAggregate;
 
                 var method = type.GetMethod("Execute", new[] { typeof(Command) });
@@ -76,9 +75,9 @@ namespace UnitTests.Core.TestHelpers
         public TAggregate Then(params Event[] expectedEvents)
         {
             var type = typeof(TAggregate);
-            var constructor = type.GetConstructor(new[] { typeof(IMediator), typeof(IEnumerable<Event>) });
+            var constructor = type.GetConstructor(new[] { typeof(IEventSink), typeof(IEnumerable<Event>) });
 
-            var mediatorMock = new MockMediator();
+            var mediatorMock = new MockEventSink();
             var aggregate = constructor.Invoke(new object[] { mediatorMock, _givenEvents }) as TAggregate;
 
             _action(aggregate);
@@ -95,9 +94,9 @@ namespace UnitTests.Core.TestHelpers
             try
             {
                 var type = typeof(TAggregate);
-                var constructor = type.GetConstructor(new[] { typeof(IMediator), typeof(IEnumerable<Event>) });
+                var constructor = type.GetConstructor(new[] { typeof(IEventSink), typeof(IEnumerable<Event>) });
 
-                var mediatorMock = new MockMediator();
+                var mediatorMock = new MockEventSink();
                 var aggregate = constructor.Invoke(new object[] { mediatorMock, _givenEvents }) as TAggregate;
 
                 _action(aggregate);

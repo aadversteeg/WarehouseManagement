@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Extensions.Messaging;
+using System.Collections.Generic;
 
 namespace Core.Commands
 {
@@ -7,6 +8,6 @@ namespace Core.Commands
         public int BatchId { get; set; }
         public int Quantity { get; set; }
 
-        public IEnumerable<BatchQuantity> From { get; set; }
+        public IReadOnlyCollection<BatchQuantity> From { get; set; }
     }
 }
