@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Core.Commands;
 using Core.Events;
-using Extensions;
-using Extensions.Messaging;
+using Core.Extensions;
+using Core.Extensions.Messaging;
 
 namespace Core
 {

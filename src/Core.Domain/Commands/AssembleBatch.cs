@@ -1,4 +1,4 @@
-﻿using Extensions.Messaging;
+﻿using Core.Extensions.Messaging;
 using System.Collections.Generic;
 
 namespace Core.Commands

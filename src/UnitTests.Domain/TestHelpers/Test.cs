@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Extensions;
-using Extensions.Messaging;
+using Core.Extensions;
+using Core.Extensions.Messaging;
 using Xunit;
 
 namespace UnitTests.Core.TestHelpers
@@ -75,7 +75,7 @@ namespace UnitTests.Core.TestHelpers
         public TAggregate Then(params Event[] expectedEvents)
         {
             var type = typeof(TAggregate);
-            var constructor = type.GetConstructor(new[] { typeof(IEventSink), typeof(IEnumerable<Event>) });
+            var constructor = type.GetConstructor(new[] { typeof(IEventSink), typeof(IReadOnlyCollection<Event>)});
 
             var mediatorMock = new MockEventSink();
             var aggregate = constructor.Invoke(new object[] { mediatorMock, _givenEvents }) as TAggregate;
@@ -94,7 +94,7 @@ namespace UnitTests.Core.TestHelpers
             try
             {
                 var type = typeof(TAggregate);
-                var constructor = type.GetConstructor(new[] { typeof(IEventSink), typeof(IEnumerable<Event>) });
+                var constructor = type.GetConstructor(new[] { typeof(IEventSink), typeof(IReadOnlyCollection<Event>) });
 
                 var mediatorMock = new MockEventSink();
                 var aggregate = constructor.Invoke(new object[] { mediatorMock, _givenEvents }) as TAggregate;

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Extensions;
-using Extensions.Messaging;
+using Core.Extensions;
+using Core.Extensions.Messaging;
 
 namespace UnitTests.Core.TestHelpers
 {

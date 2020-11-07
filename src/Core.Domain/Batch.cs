@@ -1,4 +1,4 @@
-﻿using Extensions;
+﻿using Core.Extensions;
 
 namespace Core
 {
