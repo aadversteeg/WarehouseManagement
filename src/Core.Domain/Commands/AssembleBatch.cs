@@ -1,7 +1,7 @@
 ﻿using Core.Extensions.Messaging;
 using System.Collections.Generic;
 
-namespace Core.Commands
+namespace Core.Domain.Commands
 {
     public class AssembleBatch : Command
     {

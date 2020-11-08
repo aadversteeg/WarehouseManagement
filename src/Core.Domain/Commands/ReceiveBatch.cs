@@ -1,6 +1,6 @@
 ﻿using Core.Extensions.Messaging;
 
-namespace Core.Commands
+namespace Core.Domain.Commands
 {
     public class ReceiveBatch : Command
     {

@@ -4,7 +4,7 @@ namespace Core.Events
 {
     public class CreatedLocation : Event
     {
-        public int Id { get; set; }
+        public int LocationId { get; set; }
 
         public string Name { get; set; }
     }

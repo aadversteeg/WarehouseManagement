@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Core.Commands;
+using Core.Domain.Commands;
 using Core.Events;
 using Core.Extensions;
 using Core.Extensions.Messaging;
 
-namespace Core
+namespace Core.Domain
 {
     public partial class Warehouse : AggregateRoot
     {
@@ -22,6 +22,43 @@ namespace Core
         public Warehouse(IEventSink mediator, IReadOnlyCollection<Event> events) 
             : base(mediator, events)
         {
+        }
+
+        public void CreateLocation(string name)
+        {
+            if(name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+            if(name == string.Empty)
+            {
+                throw new ArgumentOutOfRangeException(nameof(name));
+            }
+            if( _locationByLocationId.Values.Any(l => l.Name == name ))
+            {
+                throw new InvalidOperationException($"Location with name {name} is already registered.");
+            }
+
+            var newLocationId = _locationByLocationId.Keys.Max() + 1;
+            HandleAndPublish(new CreatedLocation { LocationId = newLocationId, Name = name });
+        }
+
+        public void RegisterBatch(string name)
+        {
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+            if (name == string.Empty)
+            {
+                throw new ArgumentOutOfRangeException(nameof(name));
+            }
+            if (_batchesById.Values.Any(b => b.Name == name))
+            {
+                throw new InvalidOperationException($"Batch with name {name} is already registered.");
+            }
+            var newBatchId = _batchesById.Keys.Max() + 1;
+            HandleAndPublish(new RegisteredBatch { BatchId = newBatchId, Name = name });
         }
 
         public void ReceiveBatch(int batchId, int quantity)
@@ -73,29 +110,28 @@ namespace Core
             HandleAndPublish(new AddedBatchToLocation() { LocationId = toLocationId, BatchId = batchId, Quantity = quantity });
         }
 
-        public void AssembleBatch(BatchAssembleOrder order)
+        public void AssembleBatch(int batchId, int quantity, IReadOnlyCollection<BatchQuantity> from)
         {
-            if (order == null) throw new ArgumentNullException();
-            if (order.Quantity <= 0) throw new ArgumentOutOfRangeException(nameof(order.Quantity));
-            if (order.BatchId <= 0) throw new ArgumentOutOfRangeException(nameof(order.BatchId));
-            if (order.From == null) throw new ArgumentNullException();
+            if (quantity <= 0) throw new ArgumentOutOfRangeException(nameof(quantity));
+            if (batchId <= 0) throw new ArgumentOutOfRangeException(nameof(batchId));
+            if (from == null) throw new ArgumentNullException(nameof(from));
 
             var assembleLocation = _locationByLocationId.Values.First(locationId => locationId.Name == "Assemble");
 
             var events = new List<Event>();
-            foreach (var source in order.From)
+            foreach (var source in from)
             {
-                var requiredQuantity = source.Quantity * order.Quantity;
+                var requiredQuantity = source.Quantity * quantity;
                 var quantityOnLocation = assembleLocation.QuantityOfBatch(source.BatchId);
                 if (quantityOnLocation < requiredQuantity)
                 {
-                    throw new InvalidOperationException($"Quantity {requiredQuantity} of batch with id {order.BatchId} is not present on location {assembleLocation}. Available quantity is {quantityOnLocation}.");
+                    throw new InvalidOperationException($"Quantity {requiredQuantity} of batch with id {batchId} is not present on location {assembleLocation}. Available quantity is {quantityOnLocation}.");
                 }
                 events.Add(new RemovedBatchFromLocation() { LocationId = assembleLocation.Id, BatchId = source.BatchId, Quantity = requiredQuantity });
                 events.Add(new RemovedBatch() { BatchId = source.BatchId, Quantity = requiredQuantity });
             }
-            events.Add(new AddedBatch() { BatchId = order.BatchId, Quantity = order.Quantity });
-            events.Add(new AddedBatchToLocation() { LocationId = assembleLocation.Id, BatchId = order.BatchId, Quantity = order.Quantity });
+            events.Add(new AddedBatch() { BatchId = batchId, Quantity = quantity });
+            events.Add(new AddedBatchToLocation() { LocationId = assembleLocation.Id, BatchId = batchId, Quantity = quantity });
 
             HandleAndPublish(events);
         }
@@ -128,7 +164,7 @@ namespace Core
         {
             var location = new Location()
             {
-                Id = evt.Id,
+                Id = evt.LocationId,
                 Name = evt.Name
             };
             _locationByLocationId.Add(location.Id, location);
@@ -192,24 +228,34 @@ namespace Core
 
         public void Execute(Command cmd)
         {
-            if (cmd is ReceiveBatch receiveBatch)
+            if (cmd is Commands.ReceiveBatch receiveBatch)
             {
-                Execute(receiveBatch);
+                ReceiveBatch(receiveBatch.BatchId, receiveBatch.Quantity);
             }
 
-            if (cmd is ShipBatch shipBatch)
+            if (cmd is Commands.ShipBatch shipBatch)
             {
-                Execute(shipBatch);
+                ShipBatch(shipBatch.BatchId, shipBatch.Quantity);
             }
 
-            if (cmd is AssembleBatch assembleBatch)
+            if (cmd is Commands.AssembleBatch assembleBatch)
             {
                 Execute(assembleBatch);
             }
 
-            if(cmd is MoveBatch moveBatch)
+            if(cmd is Commands.MoveBatch moveBatch)
             {
-                Execute(moveBatch);
+                MoveBatch(moveBatch.BatchId, moveBatch.Quantity, moveBatch.FromLocationId, moveBatch.ToLocationId);
+            }
+
+            if(cmd is Commands.CreateLocation createLocation)
+            {
+                CreateLocation(createLocation.Name);
+            }
+
+            if(cmd is Commands.RegisterBatch registerBatch)
+            {
+                RegisterBatch(registerBatch.Name);
             }
         }
     }
